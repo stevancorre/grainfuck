@@ -8,8 +8,6 @@ I was looking for a little cool project, and I heard about this beautiful langua
 - [x] Simulation
 - [ ] Compilation
 
-Note that simulation and emulation are inspired
-
 ## Brainfuck ?
 
 It's in its name! This language is here to destroy your brain. Honestly, I think it looks kinda cool, a bit sus, but kinda cool ngl.
