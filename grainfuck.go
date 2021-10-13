@@ -42,8 +42,15 @@ func main() {
 	// parse flags (like -compile etc..)
 	flag.Parse()
 
+	// check if either simulation or compilation mode was choosen
+	if !*run && !*build {
+		printError("You need to select at least one execution mode")
+		printUsageAndExit()
+	}
+
 	// check if any file was provided
 	if len(flag.Args()) != 1 {
+		printError("No file was provided")
 		printUsageAndExit()
 	}
 
@@ -57,6 +64,9 @@ func main() {
 		printUsageAndExit()
 	}
 
-	tokens := program.ParseProgram(fpath)
-	fmt.Printf("%#v", tokens)
+	tokens := program.ParseCommands(fpath)
+
+	if *run {
+		program.Simulate(tokens, *memorySize)
+	}
 }
