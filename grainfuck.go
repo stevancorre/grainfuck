@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"grainfuck/program"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,8 +11,9 @@ import (
 
 // flag setup
 var (
-	compile  *bool = flag.Bool("compile", false, "Enables compilation")
-	simulate *bool = flag.Bool("simulate", false, "Enables simulation")
+	build      *bool = flag.Bool("build", false, "Enables compilation")
+	run        *bool = flag.Bool("run", false, "Enables simulation")
+	memorySize *uint = flag.Uint("mem", 30_000, "Set the memory size")
 )
 
 func init() {
@@ -46,17 +48,15 @@ func main() {
 	}
 
 	// get the provided file path and check its extension
-	var (
-		fpath string = flag.Arg(0)
-		fext  string = filepath.Ext(strings.TrimSpace(fpath))
-	)
+	// no need to check if it exists, CompileProgram() is going to handle this case
+	fpath := flag.Arg(0)
+	fext := filepath.Ext(strings.TrimSpace(fpath))
 
 	if fext != ".b" && fext != ".bf" {
 		printError("Target file needs to be a brainfuck file (.bf or .b)")
 		printUsageAndExit()
 	}
-}
 
-func compileProgram() {
-
+	tokens := program.ParseProgram(fpath)
+	fmt.Printf("%#v", tokens)
 }
