@@ -23,7 +23,7 @@ func init() {
 
 		flag.PrintDefaults()
 
-		fmt.Fprintf(os.Stderr, "\nNote: if you enable both simulation and compilation mode, it's going to first simulate the program, then compile it if no error was detected.")
+		fmt.Fprintf(os.Stderr, "\nNote: if you enable both simulation and compilation mode, it's going to first compile the program, then run the executable")
 	}
 }
 
