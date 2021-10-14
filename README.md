@@ -35,7 +35,7 @@ $ cd grainfuck
 
 # build
 $ mkdir build
-$ go build -o build
+$ go build ./src -o build
 
 # run
 $ cd build

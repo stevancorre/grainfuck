@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"grainfuck/program"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,7 +22,7 @@ func init() {
 
 		flag.PrintDefaults()
 
-		fmt.Fprintf(os.Stderr, "\nNote: if you enable both simulation and compilation mode, it's going to first compile the program, then run the executable")
+		fmt.Fprintf(os.Stderr, "\nNote: if you enable both simulation and compilation mode, it's going to first compile the program, then run the executable\n")
 	}
 }
 
@@ -64,9 +63,9 @@ func main() {
 		printUsageAndExit()
 	}
 
-	tokens := program.ParseCommands(fpath)
+	tokens := ParseCommands(fpath)
 
 	if *run {
-		program.Simulate(tokens, *memorySize)
+		Simulate(tokens, *memorySize)
 	}
 }

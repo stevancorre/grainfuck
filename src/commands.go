@@ -1,4 +1,4 @@
-package program
+package main
 
 type command struct {
 	id  uint8
