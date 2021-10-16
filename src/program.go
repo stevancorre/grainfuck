@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
 )
 
+// TODO: check log.Fatalf
 func Assert(condition bool, format string, args ...interface{}) {
 	if !condition {
 		fmt.Printf(format+"\n", args...)
@@ -71,7 +73,7 @@ func ParseCommands(fpath string) []command {
 	return commands
 }
 
-func Simulate(commands []command, memSize uint) {
+func SimulateProgram(commands []command, memSize uint) {
 	// data buffer for simulion
 	mem := make([]byte, memSize)
 	ptr := 0
@@ -125,4 +127,108 @@ func Simulate(commands []command, memSize uint) {
 			panic("Unreachable")
 		}
 	}
+}
+
+func CompileProgram(opath string, commands []command, memSize uint) {
+	// TODO: check error here
+	file, _ := os.OpenFile(opath+".asm", os.O_CREATE|os.O_WRONLY, 0644)
+	//Assert(err == nil, err.Error())
+	datawriter := bufio.NewWriter(file)
+
+	// data
+	datawriter.WriteString("section .data\n")
+	datawriter.WriteString("    mem: times 30000 db 0		 	; memory\n")
+	datawriter.WriteString("    memp: dd 0					 	; position in memory\n")
+
+	// asm
+	datawriter.WriteString("section .text\n")
+
+	datawriter.WriteString("extern putchar, getchar\n")
+	datawriter.WriteString("global main\n")
+
+	// printchar
+	datawriter.WriteString("printChar:")
+	datawriter.WriteString("    mov edx, dword[memp]\n")
+	datawriter.WriteString("    push eax\n")
+	datawriter.WriteString("    push ecx\n")
+	datawriter.WriteString("    mov edx, dword[memp]\n")
+	datawriter.WriteString("    mov eax, 0\n")
+	datawriter.WriteString("    mov al, byte[edx]\n")
+	datawriter.WriteString("    push eax\n")
+	datawriter.WriteString("    call putchar\n")
+	datawriter.WriteString("    add esp, 4\n")
+	datawriter.WriteString("    pop ecx\n")
+	datawriter.WriteString("    pop eax\n")
+	datawriter.WriteString("    ret\n")
+
+	datawriter.WriteString("main:\n")
+	datawriter.WriteString("    push ebp\n")
+	datawriter.WriteString("    mov ebp, esp\n")
+	datawriter.WriteString("    mov dword[memp], mem		; initialize pointer\n")
+	datawriter.WriteString("    mov ecx, dword[ebp + 8] 	; ecx - address of currently executed char\n")
+
+	// iterate through all commands
+	for ip := 0; ip < len(commands); ip++ {
+		op := commands[ip]
+
+		switch op.id {
+		case COMMAND_INCR_PTR:
+			datawriter.WriteString("    ; -- PTR PLUS --\n")
+			datawriter.WriteString("    inc dword[memp]\n")
+			break
+
+		case COMMAND_DECR_PTR:
+			datawriter.WriteString("    ; -- PTR PLUS --\n")
+			datawriter.WriteString("    dec dword[memp]\n")
+			break
+
+		case COMMAND_INCR_DPTR:
+			datawriter.WriteString("    ; -- PLUS --\n")
+			datawriter.WriteString("    mov edx, dword[memp]\n")
+			datawriter.WriteString("    inc byte[edx]\n")
+			break
+
+		case COMMAND_DECR_DPTR:
+			datawriter.WriteString("    ; -- MINUS --\n")
+			datawriter.WriteString("    mov edx, dword[memp]\n")
+			datawriter.WriteString("    dec byte[edx]\n")
+			break
+
+		case COMMAND_PCHAR:
+			datawriter.WriteString("    ; -- PUTCHAR --\n")
+			datawriter.WriteString("    call printChar\n")
+			break
+
+		case COMMAND_GCHAR:
+			panic("Not implemented")
+
+		case COMMAND_JMPFW:
+			panic("Not implemented")
+
+		case COMMAND_JMPBW:
+			panic("Not implemented")
+
+		default:
+			panic("Unreachable")
+		}
+	}
+
+	// exit
+	datawriter.WriteString("    mov esp, ebp\n")
+	datawriter.WriteString("    pop ebp\n")
+	datawriter.WriteString("    ret\n")
+
+	// close everything
+	datawriter.Flush()
+	file.Close()
+}
+
+func BuildProgram(opath string) {
+	// TODO: check error here and output current state
+	exec.Command("nasm", "-felf32", fmt.Sprintf("%s.asm", opath)).Run()
+	exec.Command("gcc", "-m32", fmt.Sprintf("%s.o", opath), "-o", opath).Run()
+}
+
+func RunProgram(opath string) {
+	panic("Not implemented")
 }
