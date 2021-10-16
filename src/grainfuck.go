@@ -4,15 +4,17 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
 
 // flag setup
 var (
-	build      *bool = flag.Bool("build", false, "Enables compilation")
-	run        *bool = flag.Bool("run", false, "Enables simulation")
-	memorySize *uint = flag.Uint("mem", 30_000, "Set the memory size")
+	build      *bool   = flag.Bool("build", false, "Enables compilation")
+	run        *bool   = flag.Bool("run", false, "Enables simulation")
+	outputPath *string = flag.String("o", "", "Set the output build path")
+	memorySize *uint   = flag.Uint("mem", 30_000, "Set the memory size")
 )
 
 func init() {
@@ -63,9 +65,39 @@ func main() {
 		printUsageAndExit()
 	}
 
-	tokens := ParseCommands(fpath)
+	program := ParseCommands(fpath)
 
-	if *run {
-		Simulate(tokens, *memorySize)
+	if *build {
+		// TODO: check if output path is a file or smth
+
+		// get working directory, and join with output path is output
+		// path isn't absolute
+		wd, _ := os.Getwd()
+		if !filepath.IsAbs(*outputPath) {
+			*outputPath = filepath.Join(wd, *outputPath)
+
+			// if output path doesn't exists, or isn't a directory
+			// we want to considere the output path as a file
+			dir, err := os.Stat(*outputPath)
+			if err != nil || !dir.IsDir() {
+				fpath = ""
+			}
+		}
+
+		// remove extension and join with file name
+		fpath = strings.TrimSuffix(fpath, path.Ext(fpath))
+		opath := path.Join(*outputPath, filepath.Base(fpath))
+
+		// compile to asm, then build using nasm
+		CompileProgram(opath, program, *memorySize)
+		BuildProgram(opath)
+
+		if *run {
+			// build and run
+			RunProgram(opath)
+		}
+	} else if *run {
+		// run
+		SimulateProgram(program, *memorySize)
 	}
 }
