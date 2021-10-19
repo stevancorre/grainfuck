@@ -1,9 +1,7 @@
 package main
 
 type command struct {
-	id  uint8
-	row int
-	col int
+	id int
 
 	// for [ ]
 	refIp int
@@ -11,7 +9,7 @@ type command struct {
 
 const (
 	// start at 1 so we can use 0 to check if token is valid or not in CompileProgram()
-	COMMAND_INCR_PTR uint8 = iota + 1
+	COMMAND_INCR_PTR int = iota + 1
 	COMMAND_DECR_PTR
 	COMMAND_INCR_DPTR
 	COMMAND_DECR_DPTR
@@ -21,7 +19,7 @@ const (
 	COMMAND_JMPBW
 )
 
-var commandsTable = map[byte]uint8{
+var commandsTable = map[byte]int{
 	'>': COMMAND_INCR_PTR,
 	'<': COMMAND_DECR_PTR,
 	'+': COMMAND_INCR_DPTR,

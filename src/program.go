@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 )
@@ -19,55 +20,43 @@ func ParseCommands(fpath string) []command {
 	var commands []command
 
 	// read file
-	file, err := os.Open(fpath)
+	file, err := ioutil.ReadFile(fpath)
 	Assert(err == nil, "ERROR: %s", err)
 
-	// initialize a new scanner, and split by lines
-	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanLines)
+	src := string(file)
 
 	var ipStack []int
 
-	// iterate through all lines
-	row := 0
 	ip := 0
+	for _, ch := range src {
+		tokenId := commandsTable[byte(ch)]
 
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		for col, ch := range line {
-			// iterate through all characters
-			tokenId := commandsTable[byte(ch)]
-
-			// if token is 0, then do nothing with it
-			if tokenId == 0 {
-				continue
-			}
-
-			// add token to tokens slice
-			token := command{
-				id:  tokenId,
-				row: row,
-				col: col,
-			}
-
-			if token.id == COMMAND_JMPFW {
-				ipStack = append(ipStack, ip)
-			} else if token.id == COMMAND_JMPBW {
-				// pop last element from stack
-				ipStackSize := len(ipStack)
-				refIp := ipStack[ipStackSize-1]
-				ipStack = ipStack[:ipStackSize-1]
-
-				// link commands
-				commands[refIp].refIp = ip
-				token.refIp = refIp
-			}
-
-			commands = append(commands, token)
-
-			ip += 1
+		// if token is 0, then do nothing with it
+		if tokenId == 0 {
+			continue
 		}
+
+		token := command{
+			id: tokenId,
+		}
+
+		if token.id == COMMAND_JMPFW {
+			ipStack = append(ipStack, ip)
+		} else if token.id == COMMAND_JMPBW {
+			// pop last element from stack
+			ipStackSize := len(ipStack)
+			refIp := ipStack[ipStackSize-1]
+			ipStack = ipStack[:ipStackSize-1]
+
+			// link commands
+			commands[refIp].refIp = ip
+			token.refIp = refIp
+		}
+
+		// add token to tokens slice
+		commands = append(commands, token)
+
+		ip += 1
 	}
 
 	return commands
@@ -79,6 +68,8 @@ func SimulateProgram(commands []command, memSize uint) {
 	ptr := 0
 
 	// iterate through all commands
+	// TODO: pre optimization
+	// TODO: do something that looks better
 	for ip := 0; ip < len(commands); ip++ {
 		op := commands[ip]
 
@@ -168,34 +159,31 @@ func CompileProgram(opath string, commands []command, memSize uint) {
 	datawriter.WriteString("    mov ecx, dword[ebp + 8] 	; ecx - address of currently executed char\n")
 
 	// iterate through all commands
+	// TODO: pre optimization
+	// TODO: make something better lol
 	for ip := 0; ip < len(commands); ip++ {
 		op := commands[ip]
 
 		switch op.id {
 		case COMMAND_INCR_PTR:
-			datawriter.WriteString("    ; -- PTR PLUS --\n")
 			datawriter.WriteString("    inc dword[memp]\n")
 			break
 
 		case COMMAND_DECR_PTR:
-			datawriter.WriteString("    ; -- PTR PLUS --\n")
 			datawriter.WriteString("    dec dword[memp]\n")
 			break
 
 		case COMMAND_INCR_DPTR:
-			datawriter.WriteString("    ; -- PLUS --\n")
 			datawriter.WriteString("    mov edx, dword[memp]\n")
 			datawriter.WriteString("    inc byte[edx]\n")
 			break
 
 		case COMMAND_DECR_DPTR:
-			datawriter.WriteString("    ; -- MINUS --\n")
 			datawriter.WriteString("    mov edx, dword[memp]\n")
 			datawriter.WriteString("    dec byte[edx]\n")
 			break
 
 		case COMMAND_PCHAR:
-			datawriter.WriteString("    ; -- PUTCHAR --\n")
 			datawriter.WriteString("    call printChar\n")
 			break
 
@@ -203,10 +191,20 @@ func CompileProgram(opath string, commands []command, memSize uint) {
 			panic("Not implemented")
 
 		case COMMAND_JMPFW:
-			panic("Not implemented")
+			datawriter.WriteString(fmt.Sprintf("addr_%d:\n", ip))
+			datawriter.WriteString("    mov edx, dword[memp]\n")
+			datawriter.WriteString("    mov al, byte[edx]\n")
+			datawriter.WriteString("    cmp al, 0\n")
+			datawriter.WriteString(fmt.Sprintf("    je addr_%d\n", op.refIp))
+			break
 
 		case COMMAND_JMPBW:
-			panic("Not implemented")
+			datawriter.WriteString(fmt.Sprintf("addr_%d:\n", ip))
+			datawriter.WriteString("    mov edx, dword[memp]\n")
+			datawriter.WriteString("    mov al, byte[edx]\n")
+			datawriter.WriteString("    cmp al, 0\n")
+			datawriter.WriteString(fmt.Sprintf("    jne addr_%d\n", op.refIp))
+			break
 
 		default:
 			panic("Unreachable")
