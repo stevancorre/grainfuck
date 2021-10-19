@@ -6,7 +6,9 @@ I was looking for a little cool project, and I heard about this beautiful langua
 ## Todo
 
 - [x] Simulation
-- [ ] Compilation
+- [x] Compilation
+- [ ] Parser optimization
+- [ ] Compiler optimization
 
 ## Brainfuck ?
 
@@ -39,7 +41,7 @@ $ go build ./src -o build
 
 # run
 $ cd build
-$ ./grainfuck
+$ ./grainfuck <args>
 ```
 
 ## How to use
