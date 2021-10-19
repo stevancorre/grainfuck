@@ -194,16 +194,16 @@ func CompileProgram(opath string, commands []command, memSize uint) {
 			datawriter.WriteString(fmt.Sprintf("addr_%d:\n", ip))
 			datawriter.WriteString("    mov edx, dword[memp]\n")
 			datawriter.WriteString("    mov al, byte[edx]\n")
-			datawriter.WriteString("    cmp al, 0\n")
-			datawriter.WriteString(fmt.Sprintf("    je addr_%d\n", op.refIp))
+			datawriter.WriteString("    test al, al\n")
+			datawriter.WriteString(fmt.Sprintf("    jz addr_%d\n", op.refIp))
 			break
 
 		case COMMAND_JMPBW:
 			datawriter.WriteString(fmt.Sprintf("addr_%d:\n", ip))
 			datawriter.WriteString("    mov edx, dword[memp]\n")
 			datawriter.WriteString("    mov al, byte[edx]\n")
-			datawriter.WriteString("    cmp al, 0\n")
-			datawriter.WriteString(fmt.Sprintf("    jne addr_%d\n", op.refIp))
+			datawriter.WriteString("    test al, al\n")
+			datawriter.WriteString(fmt.Sprintf("    jnz addr_%d\n", op.refIp))
 			break
 
 		default:
