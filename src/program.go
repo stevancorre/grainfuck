@@ -1,3 +1,5 @@
+// TODO: enable wrapping
+
 package main
 
 import (
@@ -152,6 +154,17 @@ func CompileProgram(opath string, commands []command, memSize uint) {
 	datawriter.WriteString("    pop eax\n")
 	datawriter.WriteString("    ret\n")
 
+	// read char
+	datawriter.WriteString("readChar:\n")
+	datawriter.WriteString("    push eax\n")
+	datawriter.WriteString("    push ecx\n")
+	datawriter.WriteString("    call getchar\n")
+	datawriter.WriteString("    mov ecx, dword[memp]\n")
+	datawriter.WriteString("    mov byte[ecx], al\n")
+	datawriter.WriteString("    pop ecx\n")
+	datawriter.WriteString("    pop eax\n")
+	datawriter.WriteString("    ret\n")
+
 	datawriter.WriteString("main:\n")
 	datawriter.WriteString("    push ebp\n")
 	datawriter.WriteString("    mov ebp, esp\n")
@@ -188,7 +201,7 @@ func CompileProgram(opath string, commands []command, memSize uint) {
 			break
 
 		case COMMAND_GCHAR:
-			panic("Not implemented")
+			datawriter.WriteString("    call readChar\n")
 
 		case COMMAND_JMPFW:
 			datawriter.WriteString(fmt.Sprintf("addr_%d:\n", ip))
