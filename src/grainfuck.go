@@ -50,20 +50,13 @@ func main() {
 	}
 
 	// check if any file was provided
-	if len(flag.Args()) != 1 {
-		printError("No file was provided")
-		printUsageAndExit()
-	}
+	Assert(len(flag.Args()) != 1, "No file was provided")
 
 	// get the provided file path and check its extension
-	// no need to check if it exists, CompileProgram() is going to handle this case
+	// no need to check if it exists, ParseCommands() is going to handle this case
 	fpath := flag.Arg(0)
 	fext := filepath.Ext(strings.TrimSpace(fpath))
-
-	if fext != ".b" && fext != ".bf" {
-		printError("Target file needs to be a brainfuck file (.bf or .b)")
-		printUsageAndExit()
-	}
+	Assert(fext == ".b" || fext == ".bf", "Target file needs to be a brainfuck file (.bf or .b)")
 
 	program := ParseCommands(fpath)
 
@@ -88,7 +81,7 @@ func main() {
 		fpath = strings.TrimSuffix(fpath, path.Ext(fpath))
 		opath := path.Join(*outputPath, filepath.Base(fpath))
 
-		// compile to asm, then build using nasm
+		// compile to asm, then build using nasm and gcc
 		CompileProgram(opath, program, *memorySize)
 		BuildProgram(opath)
 

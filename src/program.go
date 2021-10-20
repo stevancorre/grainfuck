@@ -6,18 +6,19 @@ import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 )
 
-// TODO: check log.Fatalf
 func Assert(condition bool, format string, args ...interface{}) {
 	if !condition {
-		fmt.Printf(format+"\n", args...)
+		log.Printf(format+"\n", args...)
 		os.Exit(1)
 	}
 }
 
+// Parse source file to commands
 func ParseCommands(fpath string) []command {
 	var commands []command
 
@@ -64,6 +65,7 @@ func ParseCommands(fpath string) []command {
 	return commands
 }
 
+// Simulate program
 func SimulateProgram(commands []command, memSize uint) {
 	// data buffer for simulion
 	mem := make([]byte, memSize)
@@ -122,6 +124,7 @@ func SimulateProgram(commands []command, memSize uint) {
 	}
 }
 
+// Compile program to assembly
 func CompileProgram(opath string, commands []command, memSize uint) {
 	// TODO: check error here
 	file, _ := os.OpenFile(opath+".asm", os.O_CREATE|os.O_WRONLY, 0644)
@@ -234,12 +237,19 @@ func CompileProgram(opath string, commands []command, memSize uint) {
 	file.Close()
 }
 
-func BuildProgram(opath string) {
-	// TODO: check error here and output current state
-	exec.Command("nasm", "-felf32", fmt.Sprintf("%s.asm", opath)).Run()
-	exec.Command("gcc", "-m32", fmt.Sprintf("%s.o", opath), "-o", opath).Run()
+// Run a command and output it results
+func runCommand(name string, args ...string) {
+	cmd := exec.Command(name, args...)
+	out, err := cmd.CombinedOutput()
+	Assert(err == nil, "ERROR:\n%s\n%", out, err.Error())
 }
 
+// Compiled using NASM and GCC
+func BuildProgram(opath string) {
+	runCommand("nasm", "-felf32", fmt.Sprintf("%s.asm", opath))
+	runCommand("gcc", "-m32", fmt.Sprintf("%s.o", opath), "-o", opath)
+}
+
+// Run the executable
 func RunProgram(opath string) {
-	panic("Not implemented")
 }
