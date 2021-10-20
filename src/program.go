@@ -252,4 +252,12 @@ func BuildProgram(opath string) {
 
 // Run the executable
 func RunProgram(opath string) {
+	cmd := &exec.Cmd{
+		Path:   opath,
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+	}
+
+	// TODO: handle error
+	cmd.Run()
 }
